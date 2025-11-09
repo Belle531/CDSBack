@@ -1,0 +1,75 @@
+{
+  "C:\\Users\\cassa\\CDSBack\\backend\\serverless.yml": {
+    "versionFramework": "4.23.0",
+    "servicePath": "C:\\Users\\cassa\\CDSBack\\backend\\serverless.yml",
+    "serviceConfigFileName": "serverless.yml",
+    "service": {
+      "service": "cds-spice-rack-api",
+      "provider": {
+        "name": "aws",
+        "runtime": "nodejs18.x",
+        "region": "us-east-1",
+        "stage": "dev",
+        "environment": {
+          "USERS_TABLE": "${self:service}-users-${self:provider.stage}",
+          "JWT_SECRET": "<REDACTED>"
+        }
+      },
+      "functions": {
+        "register": {
+          "handler": "src/handlers/auth.register",
+          "events": [
+            {
+              "http": {
+                "path": "auth/register",
+                "method": "post",
+                "cors": true
+              }
+            }
+          ]
+        },
+        "login": {
+          "handler": "src/handlers/auth.login",
+          "events": [
+            {
+              "http": {
+                "path": "auth/login",
+                "method": "post",
+                "cors": true
+              }
+            }
+          ]
+        }
+      },
+      "plugins": [
+        "serverless-offline"
+      ]
+    },
+    "provider": {
+      "name": "aws",
+      "runtime": "nodejs18.x",
+      "region": "us-east-1",
+      "stage": "dev",
+      "environment": {
+        "USERS_TABLE": "${self:service}-users-${self:provider.stage}",
+        "JWT_SECRET": "<REDACTED>"
+      }
+    },
+    "error": {
+      "message": "Unauthorized",
+      "code": "AUTH_FAILED"
+    },
+    "serviceRawFile": "service: cds-spice-rack-api\r\n\r\nprovider:\r\n  name: aws\r\n  runtime: nodejs18.x\r\n  region: us-east-1\r\n  stage: ${opt:stage, 'dev'}\r\n  \r\n  environment:\r\n    USERS_TABLE: ${self:service}-users-${self:provider.stage}\r\n    JWT_SECRET: ${env:JWT_SECRET, 'fallback-secret-key'}\r\n\r\nfunctions:\r\n  register:\r\n    handler: src/handlers/auth.register\r\n    events:\r\n      - http:\r\n          path: auth/register\r\n          method: post\r\n          cors: true\r\n  \r\n  login:\r\n    handler: src/handlers/auth.login\r\n    events:\r\n      - http:\r\n          path: auth/login\r\n          method: post\r\n          cors: true\r\n\r\nplugins:\r\n  - serverless-offline\r\n",
+    "command": [
+      "offline"
+    ],
+    "options": {
+      "httpPort": "3001"
+    },
+    "serviceProviderAwsCfStackId": null,
+    "serviceProviderAwsCfStackCreated": null,
+    "serviceProviderAwsCfStackUpdated": null,
+    "serviceProviderAwsCfStackStatus": null,
+    "serviceProviderAwsCfStackOutputs": null
+  }
+}

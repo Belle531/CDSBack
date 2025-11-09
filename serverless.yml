@@ -1,0 +1,29 @@
+# Simple test server configuration - not the full Spice Rack API yet
+# This is just for testing RegisterView.jsx
+
+service: register-test
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+
+functions:
+  register:
+    handler: src/handlers/register.test
+    events:
+      - http:
+          path: register
+          method: post
+          cors: true
+
+plugins:
+  - serverless-offline
+
+body: JSON.stringify({
+    firstName: formData.firstName,
+    lastName: formData.lastName,
+    email: formData.email,
+    password: formData.password,
+    confirmPassword: formData.confirmPassword,  // Add this line
+    selectedLanguage: selectedLanguage         // Change this line
+})
