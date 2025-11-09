@@ -1,0 +1,29 @@
+{
+  "name": "cds-spice-rack-api",
+  "version": "1.0.0",
+  "description": "Backend API for The Spice Rack - Recipe Community Platform",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "serverless offline",
+    "deploy": "serverless deploy",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1500.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "joi": "^17.11.0",
+    "uuid": "^9.0.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "serverless": "^3.38.0",
+    "serverless-offline": "^13.3.0",
+    "jest": "^29.7.0",
+    "eslint": "^8.56.0"
+  },
+  "keywords": ["serverless", "aws", "lambda", "dynamodb", "recipe", "api"],
+  "author": "Cassandra",
+  "license": "MIT"
+}
