@@ -29,6 +29,21 @@ db.serialize(() => {
             updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
+    
+    // Create tasks table for ToDoApp
+    db.run(`
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            userId INTEGER NOT NULL,
+            text TEXT NOT NULL,
+            completed BOOLEAN DEFAULT 0,
+            priority TEXT DEFAULT 'medium',
+            dueDate DATETIME,
+            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
+        )
+    `);
 });
 
 // Registration endpoint with real database storage
@@ -210,15 +225,236 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// ====================================================================
+// TASK MANAGEMENT ENDPOINTS FOR TODOAPP
+// ====================================================================
+
+// Get all tasks for a specific user
+app.get('/tasks/:userId', (req, res) => {
+    const { userId } = req.params;
+    
+    console.log('📋 Getting tasks for user:', userId);
+    
+    db.all(
+        'SELECT * FROM tasks WHERE userId = ? ORDER BY createdAt DESC',
+        [userId],
+        (err, rows) => {
+            if (err) {
+                console.error('❌ Error fetching tasks:', err);
+                return res.status(500).json({ error: 'Failed to fetch tasks' });
+            }
+            
+            console.log(`✅ Found ${rows.length} tasks for user ${userId}`);
+            res.json({ 
+                success: true, 
+                tasks: rows.map(task => ({
+                    ...task,
+                    completed: Boolean(task.completed) // Convert 0/1 to boolean
+                }))
+            });
+        }
+    );
+});
+
+// Create a new task
+app.post('/tasks', (req, res) => {
+    const { userId, text, priority = 'medium', dueDate } = req.body;
+    
+    console.log('➕ Creating new task:', { userId, text, priority });
+    
+    if (!userId || !text) {
+        return res.status(400).json({ 
+            success: false, 
+            error: 'userId and text are required' 
+        });
+    }
+    
+    db.run(
+        `INSERT INTO tasks (userId, text, priority, dueDate) VALUES (?, ?, ?, ?)`,
+        [userId, text, priority, dueDate],
+        function(err) {
+            if (err) {
+                console.error('❌ Error creating task:', err);
+                return res.status(500).json({ 
+                    success: false, 
+                    error: 'Failed to create task' 
+                });
+            }
+            
+            console.log('✅ Task created with ID:', this.lastID);
+            
+            // Return the created task
+            db.get(
+                'SELECT * FROM tasks WHERE id = ?',
+                [this.lastID],
+                (err, row) => {
+                    if (err) {
+                        return res.status(500).json({ 
+                            success: false, 
+                            error: 'Task created but failed to retrieve' 
+                        });
+                    }
+                    
+                    res.json({
+                        success: true,
+                        message: 'Task created successfully',
+                        task: {
+                            ...row,
+                            completed: Boolean(row.completed)
+                        }
+                    });
+                }
+            );
+        }
+    );
+});
+
+// Update task (toggle completion or edit text)
+app.put('/tasks/:taskId', (req, res) => {
+    const { taskId } = req.params;
+    const { completed, text, priority, dueDate } = req.body;
+    
+    console.log('✏️ Updating task:', taskId, req.body);
+    
+    // Build dynamic update query
+    const updates = [];
+    const values = [];
+    
+    if (completed !== undefined) {
+        updates.push('completed = ?');
+        values.push(completed ? 1 : 0);
+    }
+    
+    if (text !== undefined) {
+        updates.push('text = ?');
+        values.push(text);
+    }
+    
+    if (priority !== undefined) {
+        updates.push('priority = ?');
+        values.push(priority);
+    }
+    
+    if (dueDate !== undefined) {
+        updates.push('dueDate = ?');
+        values.push(dueDate);
+    }
+    
+    updates.push('updatedAt = CURRENT_TIMESTAMP');
+    values.push(taskId);
+    
+    const query = `UPDATE tasks SET ${updates.join(', ')} WHERE id = ?`;
+    
+    db.run(query, values, function(err) {
+        if (err) {
+            console.error('❌ Error updating task:', err);
+            return res.status(500).json({ 
+                success: false, 
+                error: 'Failed to update task' 
+            });
+        }
+        
+        if (this.changes === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Task not found' 
+            });
+        }
+        
+        console.log('✅ Task updated successfully');
+        
+        // Return updated task
+        db.get(
+            'SELECT * FROM tasks WHERE id = ?',
+            [taskId],
+            (err, row) => {
+                if (err) {
+                    return res.status(500).json({ 
+                        success: false, 
+                        error: 'Task updated but failed to retrieve' 
+                    });
+                }
+                
+                res.json({
+                    success: true,
+                    message: 'Task updated successfully',
+                    task: {
+                        ...row,
+                        completed: Boolean(row.completed)
+                    }
+                });
+            }
+        );
+    });
+});
+
+// Delete a task
+app.delete('/tasks/:taskId', (req, res) => {
+    const { taskId } = req.params;
+    
+    console.log('🗑️ Deleting task:', taskId);
+    
+    db.run(
+        'DELETE FROM tasks WHERE id = ?',
+        [taskId],
+        function(err) {
+            if (err) {
+                console.error('❌ Error deleting task:', err);
+                return res.status(500).json({ 
+                    success: false, 
+                    error: 'Failed to delete task' 
+                });
+            }
+            
+            if (this.changes === 0) {
+                return res.status(404).json({ 
+                    success: false, 
+                    error: 'Task not found' 
+                });
+            }
+            
+            console.log('✅ Task deleted successfully');
+            res.json({
+                success: true,
+                message: 'Task deleted successfully'
+            });
+        }
+    );
+});
+
+// Get task statistics for a user
+app.get('/tasks/:userId/stats', (req, res) => {
+    const { userId } = req.params;
+    
+    db.all(
+        `SELECT 
+            COUNT(*) as total,
+            SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed,
+            SUM(CASE WHEN completed = 0 THEN 1 ELSE 0 END) as remaining
+         FROM tasks WHERE userId = ?`,
+        [userId],
+        (err, rows) => {
+            if (err) {
+                console.error('❌ Error fetching task stats:', err);
+                return res.status(500).json({ error: 'Failed to fetch stats' });
+            }
+            
+            const stats = rows[0] || { total: 0, completed: 0, remaining: 0 };
+            res.json({ success: true, stats });
+        }
+    );
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'Database server running' });
 });
 
-app.listen(PORT, '127.0.0.1', () => {
-    console.log(`🚀 Database-powered server running on http://127.0.0.1:${PORT}`);
-    console.log(`📝 Registration endpoint: http://127.0.0.1:${PORT}/register`);
-    console.log(`� Login endpoint: http://127.0.0.1:${PORT}/login`);
-    console.log(`� View users: http://127.0.0.1:${PORT}/users`);
-    console.log(`� Database: ${dbPath}`);
+app.listen(PORT, () => {
+    console.log(`🚀 Database-powered server running on http://localhost:${PORT}`);
+    console.log(`📝 Registration endpoint: http://localhost:${PORT}/register`);
+    console.log(`🔐 Login endpoint: http://localhost:${PORT}/login`);
+    console.log(`📋 Task endpoints: http://localhost:${PORT}/tasks`);
+    console.log(`👥 View users: http://localhost:${PORT}/users`);
+    console.log(`💾 Database: ${dbPath}`);
 });
