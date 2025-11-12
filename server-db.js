@@ -471,6 +471,10 @@ app.get('/weather', async (req, res) => {
     }
 });
 
+app.get('/', (req, res) => {
+  res.send('Backend is running! Available endpoints: /register, /login, /tasks, /users');
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 Database-powered server running on http://localhost:${PORT}`);
     console.log(`📝 Registration endpoint: http://localhost:${PORT}/register`);
