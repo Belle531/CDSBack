@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: cdsback-backend
+    env: node
+    plan: free
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    envVars:
+      - key: OPENWEATHER_API_KEY
+        sync: false
+    autoDeploy: true
