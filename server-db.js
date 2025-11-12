@@ -1,8 +1,11 @@
+require('dotenv').config();
+const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const axios = require('axios'); // Make sure axios is installed
 
 const app = express();
 const PORT = 3003;
@@ -85,7 +88,7 @@ app.post('/register', async (req, res) => {
         console.log('❌ Validation failed: Password too short');
         return res.status(400).json({
             success: false,
-            error: 'Password must be at least 6 characters long'
+            error: 'Password must be at least 10 characters long'
         });
     }
 
@@ -448,6 +451,24 @@ app.get('/tasks/:userId/stats', (req, res) => {
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'Database server running' });
+});
+
+// Weather endpoint
+app.get('/weather', async (req, res) => {
+    const { city } = req.query;
+    if (!city) {
+        return res.status(400).json({ error: 'City is required' });
+    }
+    try {
+        const response = await axios.get(
+            `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${OPENWEATHER_API_KEY}&units=imperial`
+        );
+        res.json(response.data);
+    } catch (error) {
+        // Add this for better debugging:
+        console.error('OpenWeather error:', error.response?.data || error.message);
+        res.status(500).json({ error: 'Failed to fetch weather data' });
+    }
 });
 
 app.listen(PORT, () => {

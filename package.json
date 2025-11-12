@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "Simple test backend for RegisterView.jsx",
   "main": "server.js",
+
   "scripts": {
     "start": "node server-db.js",
-    "dev": "node server-db.js",
-    "start-simple": "node server.js"
+    "dev": "node server-db.js"
   },
   "keywords": [
     "test",
@@ -17,6 +17,7 @@
   "license": "MIT",
   "dependencies": {
     "aws-sdk": "^2.1692.0",
+    "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "express": "^5.1.0",
