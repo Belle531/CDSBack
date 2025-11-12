@@ -1,3 +1,11 @@
+const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
+const express = require('express');
+const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
+const axios = require('axios'); // Make sure axios is installed
+
 require('dotenv').config();
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
 const express = require('express');
@@ -8,7 +16,7 @@ const path = require('path');
 const axios = require('axios'); // Make sure axios is installed
 
 const app = express();
-const PORT = 3003;
+const PORT = process.env.PORT || 3003;
 
 // Enable CORS for all routes
 app.use(cors());
