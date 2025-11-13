@@ -6,7 +6,9 @@
 
   "scripts": {
     "start": "node server-db.js",
-    "dev": "node server-db.js"
+    "dev": "nodemon server-db.js",
+    "start:newapp": "node index.js",
+    "dev:newapp": "nodemon index.js"
   },
   "keywords": [
     "test",
