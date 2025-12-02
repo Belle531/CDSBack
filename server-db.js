@@ -472,7 +472,7 @@ app.get('/weather', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.send('Backend is running! Available endpoints: /register, /login, /tasks, /users');
+  res.send('Backend is running! Available endpoints: /register, /login, /tasks, /users, /contact, /weather,');
 });
 
 app.listen(PORT, () => {
@@ -481,5 +481,7 @@ app.listen(PORT, () => {
     console.log(`🔐 Login endpoint: http://localhost:${PORT}/login`);
     console.log(`📋 Task endpoints: http://localhost:${PORT}/tasks`);
     console.log(`👥 View users: http://localhost:${PORT}/users`);
+    console.log(`� Contact endpoint: http://localhost:${PORT}/contact`);
+    console.log(`🌤️ Weather endpoint: http://localhost:${PORT}/weather`);
     console.log(`💾 Database: ${dbPath}`);
 });
